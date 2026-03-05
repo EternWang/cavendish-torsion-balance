@@ -1,0 +1,22 @@
+{
+  "input_csv": "laser_data_youtube_reread_100min_mb140_scale05_msec_t0.csv",
+  "ruler_length_cm": 100.0,
+  "pixel_x0_cm0": 136.0,
+  "pixel_x100_cm100": 1761.0,
+  "analysis_window_sec": [
+    0.0,
+    6000.0
+  ],
+  "transition_time_sec": 2880.0,
+  "S1_cm": 51.69230769230769,
+  "S2_cm": 57.599999999999994,
+  "DeltaS_cm": 5.907692307692301,
+  "u_DeltaS_cm": 0.22378577509344436,
+  "T_sec": 292.3000000000002,
+  "u_T_sec": 12.750359999999864,
+  "G_raw": 1.4428087065536273e-10,
+  "beta": 0.058772337831158816,
+  "G_corrected": 1.5329008746183776e-10,
+  "u_G_linear": 1.5142267311419764e-11,
+  "rel_u_G_pct": 9.87817774922302
+}

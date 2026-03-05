@@ -1,0 +1,49 @@
+{
+  "constants": {
+    "m1_kg": 1.5,
+    "u_m1_kg": 0.01,
+    "m2_kg": 0.0383,
+    "d_m": 0.05,
+    "r_m": 0.00819,
+    "b_m": 0.0422,
+    "u_b_m": 0.0006,
+    "L_m": 2.838,
+    "u_L_m": 0.01,
+    "G_true": 6.674e-11,
+    "tilt_mrad_examples": [
+      0.1,
+      0.5
+    ],
+    "r_person_m_examples": [
+      1.0,
+      2.0
+    ],
+    "M_person_kg": 70.0,
+    "delta_b_asym_m": 0.002,
+    "ribbon_drift_cm_example": 0.5,
+    "scale_ruler_cm": 100.0,
+    "scale_pixels_example": 1625,
+    "scale_endpoint_px_unc_each": 5
+  },
+  "runs": {
+    "youtube_100min": {
+      "raw_csv": "data/raw/laser_data_youtube_reread_100min_mb140_scale05_msec_t0.csv",
+      "metadata_json": "data/metadata/youtube_bimodal_100cm_mb140_scale05_msec_t0_transition2880.json",
+      "calibration": "ruler"
+    },
+    "video_alt_full": {
+      "raw_csv": "data/raw/laser_data_video_alt_full_imgcal.csv",
+      "transition_time_sec": 1080.0,
+      "S1_cm": 93.11,
+      "S2_cm": 103.73,
+      "calibration": "anchor"
+    },
+    "video_main_100min": {
+      "raw_csv": "data/raw/laser_data_video_main_100min_imgcal.csv",
+      "transition_time_sec": 3123.0,
+      "S1_cm": 82.61,
+      "S2_cm": 96.03,
+      "calibration": "anchor"
+    }
+  }
+}
