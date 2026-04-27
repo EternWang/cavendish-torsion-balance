@@ -2,6 +2,14 @@
 
 This repository documents a Cavendish torsion balance experiment using video-based laser-spot tracking, calibrated position reconstruction, and uncertainty-aware analysis of the gravitational constant.
 
+## Portfolio signal
+
+This project highlights reproducible time-series analysis from imperfect observational
+data. The workflow turns raw tracking outputs into calibrated measurements, records
+systematic-error assumptions, and regenerates report tables from code. For research
+groups working with political, legal, or institutional records, this is the same habit:
+make each transformation visible, versioned, and checkable.
+
 ## What the code does
 
 - Track the reflected laser spot from video with OpenCV
