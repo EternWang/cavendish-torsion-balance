@@ -16,6 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +53,21 @@ def save_figure(fig: plt.Figure, path: Path) -> None:
     fig.tight_layout()
     fig.savefig(path, bbox_inches="tight", facecolor="white")
     plt.close(fig)
+
+
+def draw_card(ax: plt.Axes, x: float, y: float, w: float, h: float, title: str, body: str, color: str) -> None:
+    box = FancyBboxPatch(
+        (x, y),
+        w,
+        h,
+        boxstyle="round,pad=0.018,rounding_size=0.025",
+        facecolor="white",
+        edgecolor="#CBD5E1",
+        linewidth=1.0,
+    )
+    ax.add_patch(box)
+    ax.text(x + 0.035, y + h - 0.07, title, ha="left", va="top", fontsize=11, weight="bold", color=color)
+    ax.text(x + 0.035, y + h - 0.145, body, ha="left", va="top", fontsize=9.3, color="#172033", linespacing=1.25)
 
 
 def load_params() -> dict:
@@ -142,6 +158,100 @@ def plot_readme_overview(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: 
     save_figure(fig, FIG_DIR / "method2_overview.png")
 
 
+def plot_research_snapshot(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: dict) -> None:
+    set_plot_style()
+    fig = plt.figure(figsize=(11.2, 5.5), facecolor="white")
+    grid = fig.add_gridspec(2, 3, height_ratios=[0.92, 1.08], width_ratios=[1.05, 1.0, 1.0])
+
+    accepted = params["constants"]["G_true"] * 1e10
+    main_run = method_df.loc[method_df["run"] == "video_main_100min"].iloc[0]
+    top_sys = sys_df.sort_values("frac_of_deltaSexp_pct", ascending=False).head(4)
+
+    ax_cards = fig.add_subplot(grid[0, :])
+    ax_cards.axis("off")
+    ax_cards.set_xlim(0, 1)
+    ax_cards.set_ylim(0, 1)
+    fig.suptitle("Cavendish torsion balance analysis", x=0.04, y=0.985, ha="left", fontsize=17, weight="bold", color="#172033")
+    fig.text(
+        0.04,
+        0.925,
+        "Video-derived laser tracking converted into calibrated deflection estimates and systematic-error tables.",
+        ha="left",
+        fontsize=10.5,
+        color=GRAY,
+    )
+
+    draw_card(
+        ax_cards,
+        0.02,
+        0.08,
+        0.28,
+        0.68,
+        "Tracking inputs",
+        "laser-spot centroid series\nruler / anchor calibration\nprocessed position tables",
+        BLUE,
+    )
+    draw_card(
+        ax_cards,
+        0.36,
+        0.08,
+        0.28,
+        0.68,
+        "Method II output",
+        f"main run G = {main_run['G0_SI'] * 1e10:.2f} +/- {main_run['uG0_stat_SI'] * 1e10:.2f}\n"
+        f"accepted G = {accepted:.2f}\n"
+        "values shown in 10^-10 SI units",
+        ORANGE,
+    )
+    draw_card(
+        ax_cards,
+        0.70,
+        0.08,
+        0.28,
+        0.68,
+        "Systematics",
+        f"{len(sys_df)} modeled effects\n"
+        f"largest listed: {top_sys.iloc[0]['effect']}\n"
+        "tables regenerated from parameters",
+        GREEN,
+    )
+
+    ax_g = fig.add_subplot(grid[1, :2])
+    labels = ["YouTube run", "Alt in-lab run", "Main in-lab run"]
+    y = np.arange(len(labels))
+    values = method_df["G0_SI"].to_numpy(dtype=float) * 1e10
+    errors = method_df["uG0_stat_SI"].to_numpy(dtype=float) * 1e10
+    ax_g.errorbar(values, y, xerr=errors, fmt="o", color=BLUE, ecolor="#7FA7C7", capsize=5, ms=8)
+    ax_g.axvline(accepted, color=GREEN, ls="--", lw=1.5, label="accepted value")
+    ax_g.set_yticks(y, labels)
+    ax_g.set_xlabel("G estimate (10^-10 SI)")
+    ax_g.set_title("Calibrated deflection estimates", weight="bold", loc="left")
+    ax_g.set_xlim(0.55, max(values + errors) + 0.75)
+    for x, yy, sigma in zip(values, y, errors):
+        ax_g.text(x + sigma + 0.08, yy, f"{x:.2f} +/- {sigma:.2f}", va="center", color=GRAY, fontsize=9.5)
+    ax_g.legend(loc="lower right")
+
+    ax_sys = fig.add_subplot(grid[1, 2])
+    top = top_sys.iloc[::-1].copy()
+    short_labels = {
+        "Source-mass spacing asymmetry (delta b approx 2 mm)": "mass-spacing asymmetry",
+        "Ribbon drift (example)": "ribbon drift",
+        "Base tilt 0.5 mrad": "base tilt 0.5 mrad",
+        "Base tilt 0.1 mrad": "base tilt 0.1 mrad",
+    }
+    top["display_effect"] = top["effect"].map(lambda value: short_labels.get(value, value[:28]))
+    ax_sys.barh(top["display_effect"], top["frac_of_deltaSexp_pct"], color=ORANGE)
+    ax_sys.set_xlabel("% of expected deflection")
+    ax_sys.set_title("Largest systematic scales", weight="bold", loc="left")
+    for idx, value in enumerate(top["frac_of_deltaSexp_pct"]):
+        ax_sys.text(value + 0.5, idx, f"{value:.1f}%", va="center", color=GRAY, fontsize=9)
+    ax_sys.set_xlim(0, top["frac_of_deltaSexp_pct"].max() * 1.22)
+
+    fig.tight_layout(rect=[0.03, 0.02, 0.99, 0.9])
+    fig.savefig(FIG_DIR / "research_snapshot.png", bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
 def main() -> None:
     params = load_params()
     c = params["constants"]
@@ -193,7 +303,7 @@ def main() -> None:
         with open(ROOT / "data" / "processed" / f"{run_key}_calibration.json", "w", encoding="utf-8") as f:
             json.dump(cal, f, indent=2)
 
-    # --- Method II summary table (ΔS from fit summary, G0 from PASCO formula) ---
+    # --- Method II summary table (deltaS from fit summary, G0 from PASCO formula) ---
     rows = []
     for case, deltaS_cm in [
         ("youtube_100min", deltaS_by_run["youtube_100min"]),
@@ -217,7 +327,7 @@ def main() -> None:
     method_df = pd.DataFrame(rows)
     method_df.to_csv(ROOT / "results" / "method2_summary.csv", index=False)
 
-    # --- Expected signal scale ΔS_exp (using accepted G) ---
+    # --- Expected signal scale deltaS_exp (using accepted G) ---
     factor = c["d_m"] ** 2 + 2 * c["r_m"] ** 2 / 5
     deltaS_exp_cm = (
         c["G_true"]
@@ -230,7 +340,7 @@ def main() -> None:
         * 100.0
     )
 
-    # --- Systematics table (Table 3 in the paper) expressed as δ(ΔS) ---
+    # --- Systematics table (Table 3 in the paper) expressed as delta(deltaS) ---
     F_sig = c["G_true"] * c["m1_kg"] * c["m2_kg"] / (c["b_m"] ** 2)
     tau_sig = 2 * F_sig * c["d_m"]
 
@@ -241,7 +351,7 @@ def main() -> None:
     dS_person_cm = (F1 * c["d_m"] / tau_sig) * deltaS_exp_cm
     dS_move_cm = ((F1 - F2) * c["d_m"] / tau_sig) * deltaS_exp_cm
 
-    # 2) Base tilt: δS ≈ 4 L δθ
+    # 2) Base tilt: deltaS ~= 4 L delta(theta)
     def dS_from_tilt_mrad(mrad: float) -> float:
         return 4 * c["L_m"] * (mrad * 1e-3) * 100
 
@@ -251,7 +361,7 @@ def main() -> None:
     # 3) Ribbon drift example (user-observed scale)
     dS_drift_cm = c["ribbon_drift_cm_example"]
 
-    # 4) Source-mass spacing asymmetry (δb ≈ 2 mm)
+    # 4) Source-mass spacing asymmetry (delta b approx 2 mm)
     b = c["b_m"]
     db = c["delta_b_asym_m"]
     f = 0.5 * (1 + (b / (b + db)) ** 2)  # effective torque factor / (2/b^2)
@@ -263,18 +373,18 @@ def main() -> None:
     rel_force_exp = 2 * db_exp / b
     dS_hidden_cm = rel_force_exp * deltaS_exp_cm
 
-    # 6) Scale calibration: two endpoints each ±5 px uncertainty
+    # 6) Scale calibration: two endpoints, each with +/-5 px uncertainty
     u_sep_px = math.sqrt(c["scale_endpoint_px_unc_each"] ** 2 + c["scale_endpoint_px_unc_each"] ** 2)
     rel_scale = u_sep_px / c["scale_pixels_example"]
     dS_scale_cm = rel_scale * deltaS_exp_cm
 
     table3 = [
         ("70 kg person at 1 m", r"$F=Gm_2M/r^2;\ \tau\sim Fd$", dS_person_cm),
-        ("Person moving 1m→2m", r"$\Delta F = F(1)-F(2)$", dS_move_cm),
+        ("Person moving 1 m to 2 m", r"$\Delta F = F(1)-F(2)$", dS_move_cm),
         ("Base tilt 0.1 mrad", r"$\delta S\approx 4L\delta\theta$", dS_tilt_01),
         ("Base tilt 0.5 mrad", r"$\delta S\approx 4L\delta\theta$", dS_tilt_05),
         ("Ribbon drift (example)", r"slow drift over hours", dS_drift_cm),
-        ("Source-mass spacing asymmetry (δb≈2 mm)", r"$f=\frac{(1/b^2+1/(b+\delta b)^2)}{2/b^2};\ \delta(\Delta S)\approx(1-f)\Delta S_{\rm exp}$", dS_asym_cm),
+        ("Source-mass spacing asymmetry (delta b approx 2 mm)", r"$f=(1/b^2+1/(b+\delta b)^2)/(2/b^2)$", dS_asym_cm),
         ("Finite-twist geometry", r"$\delta F/F\approx 2(d\theta)/b$", dS_hidden_cm),
         ("Scale calibration (example)", r"$\delta(\Delta S)/\Delta S\sim \delta s/s$", dS_scale_cm),
     ]
@@ -289,6 +399,7 @@ def main() -> None:
     sys_df["deltaS_exp_cm_used"] = deltaS_exp_cm
     sys_df.to_csv(ROOT / "results" / "systematics_table3.csv", index=False)
     plot_readme_overview(method_df, sys_df, params)
+    plot_research_snapshot(method_df, sys_df, params)
 
     # --- Data catalog (sizes + row counts) ---
     catalog_rows = []

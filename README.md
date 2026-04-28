@@ -2,13 +2,11 @@
 
 This repository documents a Cavendish torsion balance experiment using video-based laser-spot tracking, calibrated position reconstruction, and uncertainty-aware analysis of the gravitational constant.
 
-## What This Demonstrates
+## Project Overview
 
 This project highlights reproducible time-series analysis from imperfect observational
 data. The workflow turns raw tracking outputs into calibrated measurements, records
-systematic-error assumptions, and regenerates report tables from code. For research
-groups working with political, legal, or institutional records, this is the same habit:
-make each transformation visible, versioned, and checkable.
+systematic-error assumptions, and regenerates report tables from code.
 
 ## At a Glance
 
@@ -18,8 +16,8 @@ make each transformation visible, versioned, and checkable.
   calibration metadata, and systematic-error accounting.
 - **Reproducibility signal:** one script rebuilds processed CSVs, summary tables, and
   the data catalog used by the report.
-- **Transferable skill:** the project shows how I handle imperfect observational
-  records, document assumptions, and keep derived measurements traceable.
+The main emphasis is traceability: raw tracking files, calibration choices, processed
+position series, and report-facing tables remain linked through code.
 
 ## What the code does
 
@@ -28,6 +26,10 @@ make each transformation visible, versioned, and checkable.
 - Reconstruct equilibrium shifts and oscillation behavior across multiple runs
 - Recompute Method II results and the systematic-error table used in the report
 - Export processed datasets and summary tables from the raw inputs
+
+## Research snapshot
+
+<img src="figures/research_snapshot.png" alt="Cavendish research snapshot" width="860">
 
 ## Analysis preview
 
@@ -49,6 +51,7 @@ Generated outputs include:
 - `results/method2_summary.csv`
 - `results/systematics_table3.csv`
 - `results/data_catalog.csv`
+- `figures/research_snapshot.png`
 - `figures/method2_overview.png`
 
 ## Repository structure

@@ -1,9 +1,9 @@
 effect,model_formula_latex,delta_deltaS_cm,frac_of_deltaSexp_pct,deltaS_exp_cm_used
 70 kg person at 1 m,$F=Gm_2M/r^2;\ \tau\sim Fd$,0.10688410124586091,4.155293333333334,2.5722396151541864
-Person moving 1m→2m,$\Delta F = F(1)-F(2)$,0.0801630759343957,3.1164700000000014,2.5722396151541864
+Person moving 1 m to 2 m,$\Delta F = F(1)-F(2)$,0.0801630759343957,3.1164700000000014,2.5722396151541864
 Base tilt 0.1 mrad,$\delta S\approx 4L\delta\theta$,0.11352000000000001,4.413274693819508,2.5722396151541864
 Base tilt 0.5 mrad,$\delta S\approx 4L\delta\theta$,0.5676000000000001,22.06637346909754,2.5722396151541864
 Ribbon drift (example),slow drift over hours,0.5,19.438313485815307,2.5722396151541864
-Source-mass spacing asymmetry (δb≈2 mm),$f=\frac{(1/b^2+1/(b+\delta b)^2)}{2/b^2};\ \delta(\Delta S)\approx(1-f)\Delta S_{\rm exp}$,0.11375765378950159,4.422513871542355,2.5722396151541864
+Source-mass spacing asymmetry (delta b approx 2 mm),$f=(1/b^2+1/(b+\delta b)^2)/(2/b^2)$,0.11375765378950159,4.422513871542355,2.5722396151541864
 Finite-twist geometry,$\delta F/F\approx 2(d\theta)/b$,0.013811409806002317,0.5369410269802732,2.5722396151541864
 Scale calibration (example),$\delta(\Delta S)/\Delta S\sim \delta s/s$,0.011192911228998157,0.43514263457633695,2.5722396151541864
