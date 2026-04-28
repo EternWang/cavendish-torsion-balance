@@ -3,10 +3,10 @@ data/metadata/fit_3videos_summary.json,0.0,
 data/metadata/params.json,0.001,
 data/metadata/youtube_bimodal_100cm_mb140_scale05_msec_t0_transition2880.json,0.001,
 data/processed/video_alt_full_calibration.json,0.0,
-data/processed/video_alt_full_position_cm.csv,5.473,58406
+data/processed/video_alt_full_position_cm.csv,5.529,58406
 data/processed/video_main_100min_calibration.json,0.0,
-data/processed/video_main_100min_position_cm.csv,5.509,61337
-data/processed/youtube_100min_position_cm.csv,5.344,61799
+data/processed/video_main_100min_position_cm.csv,5.567,61337
+data/processed/youtube_100min_position_cm.csv,5.403,61799
 data/raw/laser_data_video_alt_full_imgcal.csv,3.696,58406
 data/raw/laser_data_video_main_100min_imgcal.csv,3.876,61337
 data/raw/laser_data_youtube_reread_100min_mb140_scale05_msec.csv,3.974,61799

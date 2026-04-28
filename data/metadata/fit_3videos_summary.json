@@ -1,17 +1,17 @@
 [
   {
     "case": "video_main_100min",
-    "png": "C:\\Users\\93229\\OneDrive - x5r7p\\桌面\\G lab\\fit_video_main_100min.png",
+    "png": "figures/fit_video_main_100min.png",
     "delta_s_cm": 13.427063839809193
   },
   {
     "case": "video_alt_full",
-    "png": "C:\\Users\\93229\\OneDrive - x5r7p\\桌面\\G lab\\fit_video_alt_full.png",
+    "png": "figures/fit_video_alt_full.png",
     "delta_s_cm": 10.618058747408256
   },
   {
     "case": "youtube_100min",
-    "png": "C:\\Users\\93229\\OneDrive - x5r7p\\桌面\\G lab\\fit_youtube_100min.png",
+    "png": "figures/fit_youtube_100min.png",
     "delta_s_cm": 5.907692307692301
   }
 ]
