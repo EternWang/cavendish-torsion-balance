@@ -66,8 +66,11 @@ def draw_card(ax: plt.Axes, x: float, y: float, w: float, h: float, title: str, 
         linewidth=1.0,
     )
     ax.add_patch(box)
-    ax.text(x + 0.035, y + h - 0.07, title, ha="left", va="top", fontsize=11, weight="bold", color=color)
-    ax.text(x + 0.035, y + h - 0.145, body, ha="left", va="top", fontsize=9.3, color="#172033", linespacing=1.25)
+    title_y = y + h - 0.075 if body else y + h / 2
+    title_va = "top" if body else "center"
+    ax.text(x + 0.035, title_y, title, ha="left", va=title_va, fontsize=10.2, weight="bold", color=color)
+    if body:
+        ax.text(x + 0.035, y + h - 0.215, body, ha="left", va="top", fontsize=8.45, color="#172033", linespacing=1.18)
 
 
 def load_params() -> dict:
@@ -188,7 +191,7 @@ def plot_research_snapshot(method_df: pd.DataFrame, sys_df: pd.DataFrame, params
         0.28,
         0.68,
         "Tracking inputs",
-        "laser-spot centroid series\nruler / anchor calibration\nprocessed position tables",
+        "laser-spot centroids\nruler / anchor calibration\nposition tables",
         BLUE,
     )
     draw_card(
@@ -211,8 +214,8 @@ def plot_research_snapshot(method_df: pd.DataFrame, sys_df: pd.DataFrame, params
         0.68,
         "Systematics",
         f"{len(sys_df)} modeled effects\n"
-        f"largest listed: {top_sys.iloc[0]['effect']}\n"
-        "tables regenerated from parameters",
+        f"largest: {top_sys.iloc[0]['effect']}\n"
+        "regenerated from parameters",
         GREEN,
     )
 
