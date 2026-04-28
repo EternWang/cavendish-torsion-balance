@@ -16,6 +16,7 @@ systematic-error assumptions, and regenerates report tables from code.
   calibration metadata, and systematic-error accounting.
 - **Reproducibility signal:** one script rebuilds processed CSVs, summary tables, and
   the data catalog used by the report.
+
 The main emphasis is traceability: raw tracking files, calibration choices, processed
 position series, and report-facing tables remain linked through code.
 
