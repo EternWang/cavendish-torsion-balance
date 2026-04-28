@@ -6,6 +6,8 @@ Outputs:
 - results/method2_summary.csv
 - results/systematics_table3.csv
 - results/data_catalog.csv
+- figures/method2_overview.png
+- figures/tracking_diagnostics.png
 """
 from __future__ import annotations
 
@@ -140,6 +142,57 @@ def plot_readme_overview(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: 
 
     fig.suptitle("Cavendish torsion balance: traceable measurement pipeline", y=1.03, fontsize=15, fontweight="bold")
     save_figure(fig, FIG_DIR / "method2_overview.png")
+
+
+def plot_tracking_diagnostics() -> None:
+    """Render a compact diagnostic view of the laser-spot tracking workflow."""
+    set_plot_style()
+    processed_runs = [
+        ("Main in-lab run", ROOT / "data" / "processed" / "video_main_100min_position_cm.csv", BLUE),
+        ("Alt in-lab run", ROOT / "data" / "processed" / "video_alt_full_position_cm.csv", ORANGE),
+        ("YouTube benchmark", ROOT / "data" / "processed" / "youtube_100min_position_cm.csv", GREEN),
+    ]
+
+    fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.2), gridspec_kw={"width_ratios": [1.35, 1.0]})
+
+    for label, path, color in processed_runs:
+        df = pd.read_csv(path)
+        step = max(len(df) // 1800, 1)
+        sample = df.iloc[::step, :]
+        axes[0].plot(
+            sample["Time_Sec"].to_numpy(dtype=float) / 60.0,
+            sample["position_cm"].to_numpy(dtype=float),
+            color=color,
+            lw=1.05,
+            alpha=0.9,
+            label=label,
+        )
+    axes[0].set_title("Calibrated laser-spot position traces", loc="left", fontweight="bold")
+    axes[0].set_xlabel("Time (min)")
+    axes[0].set_ylabel("Position on screen (cm)")
+    axes[0].legend(loc="upper right", fontsize=8)
+
+    raw = pd.read_csv(ROOT / "data" / "raw" / "laser_data_video_main_100min_imgcal.csv")
+    step = max(len(raw) // 2500, 1)
+    raw_sample = raw.iloc[::step, :]
+    axes[1].scatter(raw_sample["X"], raw_sample["Y"], s=7, color=GREEN, alpha=0.28, label="tracked centroid")
+    recovered = raw_sample["Mode"].astype(str).str.upper().eq("RECOVERED")
+    if recovered.any():
+        axes[1].scatter(
+            raw_sample.loc[recovered, "X"],
+            raw_sample.loc[recovered, "Y"],
+            s=18,
+            color="#B4554B",
+            alpha=0.75,
+            label="recovered point",
+        )
+    axes[1].set_title("Raw centroid path, main run", loc="left", fontweight="bold")
+    axes[1].set_xlabel("X centroid (px)")
+    axes[1].set_ylabel("Y centroid (px)")
+    axes[1].legend(loc="upper right", fontsize=8)
+
+    fig.suptitle("Laser-spot tracking diagnostics", y=1.03, fontsize=15, fontweight="bold")
+    save_figure(fig, FIG_DIR / "tracking_diagnostics.png")
 
 
 def main() -> None:
@@ -289,6 +342,7 @@ def main() -> None:
     sys_df["deltaS_exp_cm_used"] = deltaS_exp_cm
     sys_df.to_csv(ROOT / "results" / "systematics_table3.csv", index=False)
     plot_readme_overview(method_df, sys_df, params)
+    plot_tracking_diagnostics()
 
     # --- Data catalog (sizes + row counts) ---
     catalog_rows = []
