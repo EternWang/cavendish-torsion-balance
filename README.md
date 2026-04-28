@@ -27,10 +27,6 @@ position series, and report-facing tables remain linked through code.
 - Recompute Method II results and the systematic-error table used in the report
 - Export processed datasets and summary tables from the raw inputs
 
-## Research snapshot
-
-<img src="figures/research_snapshot.png" alt="Cavendish research snapshot" width="860">
-
 ## Analysis preview
 
 The summary figure below is regenerated from `results/method2_summary.csv` and
@@ -51,7 +47,6 @@ Generated outputs include:
 - `results/method2_summary.csv`
 - `results/systematics_table3.csv`
 - `results/data_catalog.csv`
-- `figures/research_snapshot.png`
 - `figures/method2_overview.png`
 
 ## Repository structure

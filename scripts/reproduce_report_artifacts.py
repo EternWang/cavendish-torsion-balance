@@ -16,7 +16,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,24 +52,6 @@ def save_figure(fig: plt.Figure, path: Path) -> None:
     fig.tight_layout()
     fig.savefig(path, bbox_inches="tight", facecolor="white")
     plt.close(fig)
-
-
-def draw_card(ax: plt.Axes, x: float, y: float, w: float, h: float, title: str, body: str, color: str) -> None:
-    box = FancyBboxPatch(
-        (x, y),
-        w,
-        h,
-        boxstyle="round,pad=0.018,rounding_size=0.025",
-        facecolor="white",
-        edgecolor="#CBD5E1",
-        linewidth=1.0,
-    )
-    ax.add_patch(box)
-    title_y = y + h - 0.075 if body else y + h / 2
-    title_va = "top" if body else "center"
-    ax.text(x + 0.035, title_y, title, ha="left", va=title_va, fontsize=10.2, weight="bold", color=color)
-    if body:
-        ax.text(x + 0.035, y + h - 0.215, body, ha="left", va="top", fontsize=8.45, color="#172033", linespacing=1.18)
 
 
 def load_params() -> dict:
@@ -159,100 +140,6 @@ def plot_readme_overview(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: 
 
     fig.suptitle("Cavendish torsion balance: traceable measurement pipeline", y=1.03, fontsize=15, fontweight="bold")
     save_figure(fig, FIG_DIR / "method2_overview.png")
-
-
-def plot_research_snapshot(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: dict) -> None:
-    set_plot_style()
-    fig = plt.figure(figsize=(11.2, 5.5), facecolor="white")
-    grid = fig.add_gridspec(2, 3, height_ratios=[0.92, 1.08], width_ratios=[1.05, 1.0, 1.0])
-
-    accepted = params["constants"]["G_true"] * 1e10
-    main_run = method_df.loc[method_df["run"] == "video_main_100min"].iloc[0]
-    top_sys = sys_df.sort_values("frac_of_deltaSexp_pct", ascending=False).head(4)
-
-    ax_cards = fig.add_subplot(grid[0, :])
-    ax_cards.axis("off")
-    ax_cards.set_xlim(0, 1)
-    ax_cards.set_ylim(0, 1)
-    fig.suptitle("Cavendish torsion balance analysis", x=0.04, y=0.985, ha="left", fontsize=17, weight="bold", color="#172033")
-    fig.text(
-        0.04,
-        0.925,
-        "Video-derived laser tracking converted into calibrated deflection estimates and systematic-error tables.",
-        ha="left",
-        fontsize=10.5,
-        color=GRAY,
-    )
-
-    draw_card(
-        ax_cards,
-        0.02,
-        0.08,
-        0.28,
-        0.68,
-        "Tracking inputs",
-        "laser-spot centroids\nruler / anchor calibration\nposition tables",
-        BLUE,
-    )
-    draw_card(
-        ax_cards,
-        0.36,
-        0.08,
-        0.28,
-        0.68,
-        "Method II output",
-        f"main run G = {main_run['G0_SI'] * 1e10:.2f} +/- {main_run['uG0_stat_SI'] * 1e10:.2f}\n"
-        f"accepted G = {accepted:.2f}\n"
-        "values shown in 10^-10 SI units",
-        ORANGE,
-    )
-    draw_card(
-        ax_cards,
-        0.70,
-        0.08,
-        0.28,
-        0.68,
-        "Systematics",
-        f"{len(sys_df)} modeled effects\n"
-        f"largest: {top_sys.iloc[0]['effect']}\n"
-        "regenerated from parameters",
-        GREEN,
-    )
-
-    ax_g = fig.add_subplot(grid[1, :2])
-    labels = ["YouTube run", "Alt in-lab run", "Main in-lab run"]
-    y = np.arange(len(labels))
-    values = method_df["G0_SI"].to_numpy(dtype=float) * 1e10
-    errors = method_df["uG0_stat_SI"].to_numpy(dtype=float) * 1e10
-    ax_g.errorbar(values, y, xerr=errors, fmt="o", color=BLUE, ecolor="#7FA7C7", capsize=5, ms=8)
-    ax_g.axvline(accepted, color=GREEN, ls="--", lw=1.5, label="accepted value")
-    ax_g.set_yticks(y, labels)
-    ax_g.set_xlabel("G estimate (10^-10 SI)")
-    ax_g.set_title("Calibrated deflection estimates", weight="bold", loc="left")
-    ax_g.set_xlim(0.55, max(values + errors) + 0.75)
-    for x, yy, sigma in zip(values, y, errors):
-        ax_g.text(x + sigma + 0.08, yy, f"{x:.2f} +/- {sigma:.2f}", va="center", color=GRAY, fontsize=9.5)
-    ax_g.legend(loc="lower right")
-
-    ax_sys = fig.add_subplot(grid[1, 2])
-    top = top_sys.iloc[::-1].copy()
-    short_labels = {
-        "Source-mass spacing asymmetry (delta b approx 2 mm)": "mass-spacing asymmetry",
-        "Ribbon drift (example)": "ribbon drift",
-        "Base tilt 0.5 mrad": "base tilt 0.5 mrad",
-        "Base tilt 0.1 mrad": "base tilt 0.1 mrad",
-    }
-    top["display_effect"] = top["effect"].map(lambda value: short_labels.get(value, value[:28]))
-    ax_sys.barh(top["display_effect"], top["frac_of_deltaSexp_pct"], color=ORANGE)
-    ax_sys.set_xlabel("% of expected deflection")
-    ax_sys.set_title("Largest systematic scales", weight="bold", loc="left")
-    for idx, value in enumerate(top["frac_of_deltaSexp_pct"]):
-        ax_sys.text(value + 0.5, idx, f"{value:.1f}%", va="center", color=GRAY, fontsize=9)
-    ax_sys.set_xlim(0, top["frac_of_deltaSexp_pct"].max() * 1.22)
-
-    fig.tight_layout(rect=[0.03, 0.02, 0.99, 0.9])
-    fig.savefig(FIG_DIR / "research_snapshot.png", bbox_inches="tight", facecolor="white")
-    plt.close(fig)
 
 
 def main() -> None:
@@ -402,7 +289,6 @@ def main() -> None:
     sys_df["deltaS_exp_cm_used"] = deltaS_exp_cm
     sys_df.to_csv(ROOT / "results" / "systematics_table3.csv", index=False)
     plot_readme_overview(method_df, sys_df, params)
-    plot_research_snapshot(method_df, sys_df, params)
 
     # --- Data catalog (sizes + row counts) ---
     catalog_rows = []
