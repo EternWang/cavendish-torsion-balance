@@ -29,6 +29,13 @@ make each transformation visible, versioned, and checkable.
 - Recompute Method II results and the systematic-error table used in the report
 - Export processed datasets and summary tables from the raw inputs
 
+## Analysis preview
+
+The summary figure below is regenerated from `results/method2_summary.csv` and
+`results/systematics_table3.csv` by the reproducibility script.
+
+<img src="figures/method2_overview.png" alt="Cavendish Method II overview" width="820">
+
 ## Reproduce the analysis artifacts
 
 ```bash
@@ -42,6 +49,7 @@ Generated outputs include:
 - `results/method2_summary.csv`
 - `results/systematics_table3.csv`
 - `results/data_catalog.csv`
+- `figures/method2_overview.png`
 
 ## Repository structure
 

@@ -15,9 +15,43 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FIG_DIR = ROOT / "figures"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
+BLUE = "#2F6B9A"
+ORANGE = "#D97935"
+GREEN = "#5B8C5A"
+GRAY = "#4A5568"
+LIGHT = "#EEF2F6"
+
+
+def set_plot_style() -> None:
+    plt.rcParams.update(
+        {
+            "figure.dpi": 140,
+            "savefig.dpi": 240,
+            "font.family": "DejaVu Sans",
+            "font.size": 10.5,
+            "axes.titlesize": 14,
+            "axes.labelsize": 11,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.grid": True,
+            "grid.color": "#D9DEE7",
+            "grid.linewidth": 0.8,
+            "grid.alpha": 0.75,
+            "legend.frameon": False,
+        }
+    )
+
+
+def save_figure(fig: plt.Figure, path: Path) -> None:
+    fig.tight_layout()
+    fig.savefig(path, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
 
 
 def load_params() -> dict:
@@ -76,6 +110,36 @@ def rel_u_deflection(deltaS_cm: float, u_deltaS_cm: float, params: dict, u_T_sec
         + (2 * u_T_sec / T_sec) ** 2
         + (um1 / m1) ** 2
     )
+
+
+def plot_readme_overview(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: dict) -> None:
+    set_plot_style()
+    fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.4), gridspec_kw={"width_ratios": [1.15, 1.0]})
+
+    labels = ["YouTube run", "Alt in-lab run", "Main in-lab run"]
+    y = np.arange(len(labels))
+    g_values = method_df["G0_SI"].to_numpy(dtype=float) * 1e10
+    g_sigma = method_df["uG0_stat_SI"].to_numpy(dtype=float) * 1e10
+    accepted = params["constants"]["G_true"] * 1e10
+
+    axes[0].errorbar(g_values, y, xerr=g_sigma, fmt="o", color=BLUE, ecolor="#7FA7C7", capsize=5, ms=7)
+    axes[0].axvline(accepted, color=GREEN, ls="--", lw=1.5, label="Accepted G")
+    axes[0].set_yticks(y, labels)
+    axes[0].set_xlabel("G estimate (10^-10 SI)")
+    axes[0].set_title("Method II estimates from calibrated deflection")
+    for x, yy, sigma in zip(g_values, y, g_sigma):
+        axes[0].text(x + sigma + 0.08, yy, f"{x:.2f} +/- {sigma:.2f}", va="center", color=GRAY, fontsize=9)
+    axes[0].legend(loc="lower right")
+
+    top_sys = sys_df.sort_values("frac_of_deltaSexp_pct", ascending=False).head(5).iloc[::-1]
+    axes[1].barh(top_sys["effect"], top_sys["frac_of_deltaSexp_pct"], color=ORANGE)
+    axes[1].set_xlabel("Effect size (% of expected deflection)")
+    axes[1].set_title("Largest systematic-error scales")
+    for idx, value in enumerate(top_sys["frac_of_deltaSexp_pct"]):
+        axes[1].text(value + 0.4, idx, f"{value:.1f}%", va="center", color=GRAY, fontsize=9)
+
+    fig.suptitle("Cavendish torsion balance: traceable measurement pipeline", y=1.03, fontsize=15, fontweight="bold")
+    save_figure(fig, FIG_DIR / "method2_overview.png")
 
 
 def main() -> None:
@@ -150,7 +214,8 @@ def main() -> None:
                 "rel_uG0_stat_pct": 100 * rel_u,
             }
         )
-    pd.DataFrame(rows).to_csv(ROOT / "results" / "method2_summary.csv", index=False)
+    method_df = pd.DataFrame(rows)
+    method_df.to_csv(ROOT / "results" / "method2_summary.csv", index=False)
 
     # --- Expected signal scale ΔS_exp (using accepted G) ---
     factor = c["d_m"] ** 2 + 2 * c["r_m"] ** 2 / 5
@@ -223,6 +288,7 @@ def main() -> None:
     sys_df["frac_of_deltaSexp_pct"] = 100 * sys_df["delta_deltaS_cm"] / deltaS_exp_cm
     sys_df["deltaS_exp_cm_used"] = deltaS_exp_cm
     sys_df.to_csv(ROOT / "results" / "systematics_table3.csv", index=False)
+    plot_readme_overview(method_df, sys_df, params)
 
     # --- Data catalog (sizes + row counts) ---
     catalog_rows = []
