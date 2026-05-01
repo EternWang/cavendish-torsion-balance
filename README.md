@@ -59,8 +59,9 @@ The summary figure below is regenerated from `results/method2_summary.csv` and
 
 **Laser-spot tracking diagnostics**
 
-The diagnostic figure below shows the raw centroid logs used by the reconstruction step,
-including recovered points from the tracking workflow.
+The diagnostic figure below shows a clean Method II damped-wave simulation for the
+three runs, alongside the raw centroid path and recovered points from the tracking
+workflow.
 
 <img src="figures/tracking_diagnostics.png" alt="Laser-spot tracking diagnostics" width="820">
 

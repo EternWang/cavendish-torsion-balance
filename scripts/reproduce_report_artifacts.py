@@ -116,7 +116,7 @@ def rel_u_deflection(deltaS_cm: float, u_deltaS_cm: float, params: dict, u_T_sec
 
 def plot_readme_overview(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: dict) -> None:
     set_plot_style()
-    fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.4), gridspec_kw={"width_ratios": [1.15, 1.0]})
+    fig, axes = plt.subplots(1, 2, figsize=(11.6, 4.4), gridspec_kw={"width_ratios": [1.2, 1.0]})
 
     labels = ["YouTube run", "Alt in-lab run", "Main in-lab run"]
     y = np.arange(len(labels))
@@ -125,13 +125,32 @@ def plot_readme_overview(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: 
     accepted = params["constants"]["G_true"] * 1e10
 
     axes[0].errorbar(g_values, y, xerr=g_sigma, fmt="o", color=BLUE, ecolor="#7FA7C7", capsize=5, ms=7)
-    axes[0].axvline(accepted, color=GREEN, ls="--", lw=1.5, label="Accepted G")
+    axes[0].axvline(accepted, color=GREEN, ls="--", lw=1.5)
     axes[0].set_yticks(y, labels)
     axes[0].set_xlabel("G estimate (10^-10 SI)")
     axes[0].set_title("Method II estimates from calibrated deflection")
+    axes[0].set_xlim(max(0.35, accepted - 0.2), float(np.max(g_values + g_sigma)) + 1.2)
+    axes[0].set_ylim(-0.25, len(labels) - 0.45)
+    axes[0].annotate(
+        f"Accepted G = {accepted:.2f}",
+        xy=(accepted, 2.38),
+        xytext=(accepted + 0.16, 2.38),
+        ha="left",
+        va="center",
+        color=GREEN,
+        fontsize=9,
+        arrowprops={"arrowstyle": "-", "color": GREEN, "lw": 1.0},
+    )
     for x, yy, sigma in zip(g_values, y, g_sigma):
-        axes[0].text(x + sigma + 0.08, yy, f"{x:.2f} +/- {sigma:.2f}", va="center", color=GRAY, fontsize=9)
-    axes[0].legend(loc="lower right")
+        axes[0].text(
+            x + sigma + 0.08,
+            yy,
+            f"{x:.2f} +/- {sigma:.2f}",
+            va="center",
+            color=GRAY,
+            fontsize=9,
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.86, "pad": 1.4},
+        )
 
     top_sys = sys_df.sort_values("frac_of_deltaSexp_pct", ascending=False).head(5).iloc[::-1]
     axes[1].barh(top_sys["effect"], top_sys["frac_of_deltaSexp_pct"], color=ORANGE)
@@ -144,33 +163,49 @@ def plot_readme_overview(method_df: pd.DataFrame, sys_df: pd.DataFrame, params: 
     save_figure(fig, FIG_DIR / "method2_overview.png")
 
 
-def plot_tracking_diagnostics() -> None:
+def plot_tracking_diagnostics(params: dict, yt_meta: dict, deltaS_by_run: dict) -> None:
     """Render a compact diagnostic view of the laser-spot tracking workflow."""
     set_plot_style()
-    processed_runs = [
-        ("Main in-lab run", ROOT / "data" / "processed" / "video_main_100min_position_cm.csv", BLUE),
-        ("Alt in-lab run", ROOT / "data" / "processed" / "video_alt_full_position_cm.csv", ORANGE),
-        ("YouTube benchmark", ROOT / "data" / "processed" / "youtube_100min_position_cm.csv", GREEN),
+    model_runs = [
+        ("YouTube benchmark", "youtube_100min", GREEN, 0.0),
+        ("Alt in-lab run", "video_alt_full", ORANGE, 2.25),
+        ("Main in-lab run", "video_main_100min", BLUE, 4.5),
     ]
 
-    fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.2), gridspec_kw={"width_ratios": [1.35, 1.0]})
+    fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.2), gridspec_kw={"width_ratios": [1.35, 1.0]})
 
-    for label, path, color in processed_runs:
-        df = pd.read_csv(path)
-        step = max(len(df) // 1800, 1)
-        sample = df.iloc[::step, :]
-        axes[0].plot(
-            sample["Time_Sec"].to_numpy(dtype=float) / 60.0,
-            sample["position_cm"].to_numpy(dtype=float),
+    t_rel_min = np.linspace(-12.0, 45.0, 1400)
+    t_rel_sec = t_rel_min * 60.0
+    period_sec = float(yt_meta["T_sec"])
+    omega = 2.0 * np.pi / period_sec
+    tau_sec = 22.0 * 60.0
+    pre = 0.12 * np.exp(t_rel_sec / tau_sec) * np.sin(omega * t_rel_sec)
+    post_t = np.maximum(t_rel_sec, 0.0)
+    post = 1.0 - np.exp(-post_t / tau_sec) * np.cos(omega * post_t)
+    model = np.where(t_rel_sec < 0.0, pre, post)
+
+    axes[0].axvline(0.0, color=GRAY, ls="--", lw=1.0, alpha=0.7)
+    axes[0].text(0.8, 6.42, "source masses swapped", color=GRAY, fontsize=8, va="center")
+    for label, run_key, color, offset in model_runs:
+        delta_s = float(deltaS_by_run[run_key])
+        y_model = model + offset
+        axes[0].plot(t_rel_min, y_model, color=color, lw=1.55, alpha=0.95)
+        axes[0].hlines([offset, offset + 1.0], t_rel_min.min(), t_rel_min.max(), color=color, lw=0.7, alpha=0.18)
+        axes[0].text(
+            45.8,
+            offset + 1.0,
+            f"{label}  Delta S={delta_s:.2f} cm",
             color=color,
-            lw=1.05,
-            alpha=0.9,
-            label=label,
+            fontsize=8.4,
+            va="center",
+            ha="left",
         )
-    axes[0].set_title("Calibrated laser-spot position traces", loc="left", fontweight="bold")
-    axes[0].set_xlabel("Time (min)")
-    axes[0].set_ylabel("Position on screen (cm)")
-    axes[0].legend(loc="upper right", fontsize=8)
+    axes[0].set_title("Simulated Method II damped waves", loc="left", fontweight="bold")
+    axes[0].set_xlabel("Time since source-mass swap (min)")
+    axes[0].set_ylabel("Normalized shift, offset by run")
+    axes[0].set_yticks([0.5, 2.75, 5.0], ["YouTube", "Alt", "Main"])
+    axes[0].set_xlim(-12.0, 56.0)
+    axes[0].set_ylim(-0.45, 6.55)
 
     raw = pd.read_csv(ROOT / "data" / "raw" / "laser_data_video_main_100min_imgcal.csv")
     step = max(len(raw) // 2500, 1)
@@ -342,7 +377,7 @@ def main() -> None:
     sys_df["deltaS_exp_cm_used"] = deltaS_exp_cm
     sys_df.to_csv(ROOT / "results" / "systematics_table3.csv", index=False)
     plot_readme_overview(method_df, sys_df, params)
-    plot_tracking_diagnostics()
+    plot_tracking_diagnostics(params, yt_meta, deltaS_by_run)
 
     # --- Data catalog (sizes + row counts) ---
     catalog_rows = []
